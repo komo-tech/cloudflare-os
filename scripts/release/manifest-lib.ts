@@ -207,7 +207,9 @@ export interface ReleaseManifest {
   commit: string;
   /** ISO-8601 build time. */
   createdAt: string;
-  /** Version of the pinned wrangler that produced every bundle. */
+  /** Version of the pinned `cf` CLI used to build every bundle. */
+  cfVersion: string;
+  /** Version of the wrangler bundler `cf build` delegated to (from build output metadata). */
   wranglerVersion: string;
   /** Per-package worker entries. */
   workers: Record<string, WorkerEntry>;
@@ -483,11 +485,12 @@ export function assetR2Key(cfHash: string): string {
  *    every worker entry that has an assetsConfig (today: just the router).
  */
 export function generateManifest({
-  releaseId, commit, createdAt, wranglerVersion, workers, assetVariants,
+  releaseId, commit, createdAt, cfVersion, wranglerVersion, workers, assetVariants,
 }: {
   releaseId: string;
   commit: string;
   createdAt: string;
+  cfVersion: string;
   wranglerVersion: string;
   workers: WorkerBuild[];
   assetVariants?: Record<string, CollectedAssets>;
@@ -514,6 +517,7 @@ export function generateManifest({
     releaseId,
     commit,
     createdAt,
+    cfVersion,
     wranglerVersion,
     workers: workerEntries,
     assets,

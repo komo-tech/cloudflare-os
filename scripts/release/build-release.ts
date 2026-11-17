@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-// Builds an immutable release: every deployable worker bundled exactly as `wrangler deploy`
-// would upload it (dry-run + outdir, with the repo's pinned wrangler), plus the Access-mode
+// Builds an immutable release: every deployable worker bundled via `cf build` (delegates to the
+// pinned wrangler bundler; modules collected from `.cloudflare/output/v1`), plus the Access-mode
 // workshop-frontend asset build, plus the release manifest that describes it all.
 //
 // Output layout (mirrored to R2 by upload-release.ts):
@@ -16,10 +16,9 @@ import { execFileSync, type ExecFileSyncOptions } from "node:child_process";
 import { mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { resolveCfCommand } from "../cf-cli.ts";
 import {
-  collectAssets, collectModules, stableStringify, type CollectedAssets,
+  collectAssets, collectCfBuildModules, stableStringify, type CollectedAssets,
 } from "./hash-lib.ts";
 import {
   findDeployablePackages, generateManifest, readDeployInputs, readWranglerConfig,
@@ -66,11 +65,13 @@ function defaultReleaseId(commit: string): string {
   return `dev-${Math.floor(Date.now() / 1000).toString(36)}`;
 }
 
-function pinnedWranglerVersion(): string {
-  const pkg = JSON.parse(
+function pinnedToolVersions(): { cfVersion: string; wranglerVersion: string } {
+  const cfPkg = JSON.parse(
+      readFileSync(join(ROOT, "node_modules", "cf", "package.json"), "utf8")) as { version: string };
+  const wranglerPkg = JSON.parse(
       readFileSync(join(ROOT, "node_modules", "wrangler", "package.json"), "utf8")) as
       { version: string };
-  return pkg.version;
+  return { cfVersion: cfPkg.version, wranglerVersion: wranglerPkg.version };
 }
 
 // Builds the Access-mode frontend (VITE_CF_ACCESS_MODE is a build-time flag,
@@ -89,8 +90,9 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const commit = gitCommit();
   const releaseId = args.releaseId ?? defaultReleaseId(commit);
-  const wranglerVersion = pinnedWranglerVersion();
-  console.log(`building release ${releaseId} (commit ${commit}, wrangler ${wranglerVersion})`);
+  const { cfVersion, wranglerVersion } = pinnedToolVersions();
+  console.log(`building release ${releaseId} (commit ${commit}, cf ${cfVersion}, wrangler ` +
+      `${wranglerVersion})`);
 
   rmSync(args.out, { recursive: true, force: true });
   mkdirSync(join(args.out, "modules"), { recursive: true });
@@ -107,15 +109,13 @@ function main() {
     }
   }
 
-  // 2. Bundle every deployable package the way `wrangler deploy` would, without uploading.
+  // 2. Bundle every deployable package via `cf build`, without uploading.
   //    Run from each package dir so custom build commands (capnweb-validate) resolve their bins.
-  const bundleDir = mkdtempSync(join(tmpdir(), "gadgets-release-"));
   const workers: WorkerBuild[] = [];
   for (const pkg of findDeployablePackages(PACKAGES_DIR)) {
-    const outDir = join(bundleDir, pkg.name);
-    run("pnpm", ["exec", "wrangler", "deploy", "--dry-run", "--outdir", outDir],
-        { cwd: pkg.dir });
-    const { mainModule, modules } = collectModules(outDir);
+    const [cfCommand, cfArgv] = resolveCfCommand(pkg.dir, ["build"]);
+    run(cfCommand, cfArgv, { cwd: pkg.dir });
+    const { mainModule, modules } = collectCfBuildModules(pkg.dir);
     for (const mod of modules) {
       writeFileSync(join(args.out, "modules", mod.sha256), mod.bytes);
     }
@@ -134,13 +134,12 @@ function main() {
     releaseId,
     commit,
     createdAt: new Date().toISOString(),
+    cfVersion,
     wranglerVersion,
     workers,
     assetVariants,
   });
   writeFileSync(join(args.out, "manifest.json"), stableStringify(manifest) + "\n");
-
-  rmSync(bundleDir, { recursive: true, force: true });
   const moduleCount = workers.reduce((n, w) => n + w.modules.length, 0);
   console.log(`\nrelease ${releaseId}: ${workers.length} workers, ${moduleCount} modules, ` +
       `${Object.keys(manifest.assets).length} unique asset blobs -> ${args.out}`);

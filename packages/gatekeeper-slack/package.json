@@ -5,7 +5,7 @@
   "main": "./src/slack.ts",
   "scripts": {
     "dev": "echo \"run 'pnpm dev-server' in the root directory instead\" >&2 && exit 1",
-    "deploy": "vp run --no-cache build:configurator && wrangler deploy",
+    "deploy": "vp run --no-cache build:configurator && cf deploy",
     "clean": "rm -rf dist src/generated"
   },
   "dependencies": {
@@ -15,6 +15,7 @@
     "capnweb-validate": "catalog:"
   },
   "devDependencies": {
+    "cf": "catalog:",
     "typescript": "catalog:",
     "wrangler": "catalog:"
   }

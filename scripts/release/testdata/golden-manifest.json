@@ -13,6 +13,7 @@
       "size": 19
     }
   },
+  "cfVersion": "0.0.0-fixture",
   "commit": "0000000000000000000000000000000000000000",
   "createdAt": "2026-01-01T00:00:00.000Z",
   "manifestVersion": 1,

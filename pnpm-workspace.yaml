@@ -18,7 +18,9 @@ catalog:
   vite: 7.3.6
   vite-plus: ^0.2.8
   vitest: ^4.1.10
-  wrangler: ^4.119.0
+  wrangler: 4.164.0
+  # Exact: Cloudflare CLI 1.0 RC (pairs with wrangler 4.163.0+ for build/dev/deploy).
+  cf: 1.0.0-rc.1
 
 overrides:
   # Vitest peers can resolve vite@latest, so the version is pinned rather than ranged. Points at the
@@ -41,6 +43,12 @@ minimumReleaseAgeExclude:
   - capnweb-validate
   - workerd
   - "@cloudflare/workerd-*"
+  - cf
+  - "@cloudflare/config"
+  - "@cloudflare/build-output-utils"
+  - "@cloudflare/runtime-types"
+  - miniflare
+  - wrangler
 
 allowBuilds:
   '@google/genai': true

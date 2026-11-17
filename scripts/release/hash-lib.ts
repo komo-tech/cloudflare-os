@@ -9,7 +9,7 @@
 //    CI and the deploy service must agree on it byte for byte.
 
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, relative, extname, sep } from "node:path";
 
 /** A worker module as collected from a dry-run bundle, before the manifest strips `bytes`. */
@@ -103,6 +103,37 @@ export function collectModules(outDir: string): {
         `${esmModules.map((m) => m.name).join(", ") || "(none)"}`);
   }
   return { mainModule: esmModules[0].name, modules };
+}
+
+/** Default worker output directory produced by `cf build`. */
+const CF_BUILD_OUTPUT = join(".cloudflare", "output", "v1", "workers", "default", "bundle");
+
+interface CfWorkerManifest {
+  manifest?: { mainModule?: string };
+}
+
+/**
+ * Reads module files from `cf build` output under a package directory (`.cloudflare/output/v1/...`).
+ * Uses `worker.config.json` for the main module name when present; otherwise requires exactly one ESM.
+ */
+export function collectCfBuildModules(packageDir: string): {
+  mainModule: string;
+  modules: CollectedModule[];
+} {
+  const bundleDir = join(packageDir, CF_BUILD_OUTPUT);
+  if (!existsSync(bundleDir)) {
+    throw new Error(`cf build bundle directory missing: ${bundleDir}`);
+  }
+  let mainModule: string | undefined;
+  const workerConfigPath = join(
+      packageDir, ".cloudflare", "output", "v1", "workers", "default", "worker.config.json");
+  if (existsSync(workerConfigPath)) {
+    const workerConfig = JSON.parse(readFileSync(workerConfigPath, "utf8")) as CfWorkerManifest;
+    mainModule = workerConfig.manifest?.mainModule;
+  }
+  const collected = collectModules(bundleDir);
+  if (mainModule) return { mainModule, modules: collected.modules };
+  return collected;
 }
 
 /**

@@ -35,6 +35,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { spawn } from "node:child_process";
+import { resolveCfCommand } from "../cf-cli.ts";
 import {
   ROOT,
   STAGING_CONFIG_NAME,
@@ -416,15 +417,44 @@ async function deployPreview(
   };
 }
 
+function runCf(
+  pkg: DeployablePackage,
+  args: string[],
+): Promise<CommandResult> {
+  const [command, argv] = resolveCfCommand(pkg.dir, args);
+  return new Promise<CommandResult>((resolve, reject) => {
+    const child = spawn(command, argv, {
+      cwd: pkg.dir,
+      env: process.env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (data: string) => { stdout += data; });
+    child.stderr.on("data", (data: string) => { stderr += data; });
+    child.once("error",
+        (error) => reject(new Error(`Failed to run cf for ${pkg.name}: ${error.message}`)));
+    child.once("close", (status) => resolve({ status, stdout, stderr }));
+  });
+}
+
 async function deletePreview(
   pkg: DeployablePackage,
   previewName: string,
   wranglerCommand: string,
 ): Promise<void> {
-  console.log(`running in ${pkg.name}: ` +
-      `wrangler preview delete --name ${previewName} -c ${STAGING_CONFIG_NAME} -y`);
-  const result = await runWrangler(pkg, wranglerCommand,
-      ["preview", "delete", "--name", previewName, "-c", STAGING_CONFIG_NAME, "-y"]);
+  console.log(`running in ${pkg.name}: cf previews delete ${previewName} --worker ${pkg.name} -f`);
+  let result = await runCf(pkg,
+      ["previews", "delete", previewName, "--worker", pkg.name, "-f"]);
+  if (result.status !== 0) {
+    // Fall back to draft wrangler while staging configs remain wrangler.staging.jsonc-only.
+    console.log(`running in ${pkg.name}: ` +
+        `wrangler preview delete --name ${previewName} -c ${STAGING_CONFIG_NAME} -y`);
+    result = await runWrangler(pkg, wranglerCommand,
+        ["preview", "delete", "--name", previewName, "-c", STAGING_CONFIG_NAME, "-y"]);
+  }
   writeCommandOutput(pkg, result);
   if (result.status === 0) return;
 
@@ -436,7 +466,7 @@ async function deletePreview(
     return;
   }
   throw new Error(
-      `wrangler preview delete failed for ${pkg.name} with exit code ${result.status}`);
+      `preview delete failed for ${pkg.name} with exit code ${result.status}`);
 }
 
 /**

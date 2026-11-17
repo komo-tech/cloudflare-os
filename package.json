@@ -30,6 +30,7 @@
     "typescript6": "npm:typescript@6.0.3",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "wrangler": "catalog:"
+    "wrangler": "catalog:",
+    "cf": "catalog:"
   }
 }

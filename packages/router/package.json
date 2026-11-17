@@ -5,7 +5,7 @@
   "main": "./src/index.ts",
   "scripts": {
     "dev": "echo \"run 'pnpm dev-server' in the root directory instead\" >&2 && exit 1",
-    "deploy": "wrangler deploy",
+    "deploy": "cf deploy",
     "build": "tsc",
     "clean": "rm -rf dist",
     "test:run": "vitest run",
@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "catalog:",
+    "cf": "catalog:",
     "jsonc-parser": "^3.3.1",
     "typescript": "catalog:",
     "vitest": "catalog:",

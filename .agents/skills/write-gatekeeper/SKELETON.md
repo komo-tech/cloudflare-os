@@ -592,7 +592,7 @@ Add package scripts:
 ```json
 {
   "scripts": {
-    "deploy": "vp run --no-cache build:configurator && wrangler deploy"
+    "deploy": "vp run --no-cache build:configurator && cf deploy"
   },
   "dependencies": {
     "@gadgets/configurator-ui": "workspace:*"
@@ -606,7 +606,7 @@ script sharing a name. Build this one package with `pnpm exec vp run -F <package
 the workspace-wide `pnpm build` picks it up as usual. `deploy` goes through the task rather than
 calling
 `build-gatekeeper-configurator.ts` itself, so the codegen command lives in one place and cannot
-drift from the task that declares its env — `wrangler deploy` stays outside vp, since it has side
+drift from the task that declares its env — `cf deploy` stays outside vp, since it has side
 effects and needs real credentials.
 
 Also add a `vite.config.ts` re-exporting the shared `build` and `build:configurator` Vite+ tasks —

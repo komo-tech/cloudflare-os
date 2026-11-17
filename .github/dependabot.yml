@@ -67,6 +67,7 @@ updates:
         update-types: ["major"]
         patterns:
           - "wrangler"
+          - "cf"
           - "@cloudflare/*"
           - "workerd"
           - "@cloudflare/workerd-*"
@@ -97,6 +98,7 @@ updates:
         update-types: ["minor", "patch"]
         patterns:
           - "wrangler"
+          - "cf"
           - "@cloudflare/*"
           - "workerd"
           - "@cloudflare/workerd-*"
