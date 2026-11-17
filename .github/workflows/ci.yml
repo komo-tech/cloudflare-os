@@ -5,6 +5,8 @@ on:
     branches:
       - main
   pull_request:
+  # Lets maintainers smoke-test the workflow after enabling Actions on a fork.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,6 +26,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Runner CPU (nproc and lscpu)
+        run: |
+          echo "Runner logical CPUs: $(nproc)"
+          nproc
+          lscpu
+
+      - name: Match vp concurrency to runner CPUs
+        run: echo "VP_RUN_CONCURRENCY_LIMIT=$(nproc)" >> "$GITHUB_ENV"
 
       # Ahead of setup-node, which shells out to `pnpm store path` to find the directory it caches.
       - name: Enable Corepack
@@ -56,6 +67,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Runner CPU (nproc and lscpu)
+        run: |
+          echo "Runner logical CPUs: $(nproc)"
+          nproc
+          lscpu
+
+      - name: Match vp concurrency to runner CPUs
+        run: echo "VP_RUN_CONCURRENCY_LIMIT=$(nproc)" >> "$GITHUB_ENV"
 
       # Ahead of setup-node, which shells out to `pnpm store path` to find the directory it caches.
       - name: Enable Corepack
