@@ -45,6 +45,7 @@ function buildTestManifest() {
     releaseId: "r000000-fixture",
     commit: "0000000000000000000000000000000000000000",
     createdAt: "2026-01-01T00:00:00.000Z",
+    cfVersion: "0.0.0-fixture",
     wranglerVersion: "0.0.0-fixture",
     workers,
     assetVariants: {

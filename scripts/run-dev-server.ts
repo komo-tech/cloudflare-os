@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 // Generates dev-only wrangler.dev.jsonc files for dynamic service bindings,
-// then launches `wrangler dev` with all discovered workers.
+// then launches `wrangler dev` with all discovered workers. Local dev still uses wrangler because
+// `cf dev` has no equivalent to wrangler's multi-config `-c` (one process, many workers).
 //
 // Flags:
 //   --use-workers-ai-binding   Include the Workers AI binding in

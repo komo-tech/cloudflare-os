@@ -123,7 +123,7 @@ If you use this:
   shared `build` and `build:configurator` Vite+ tasks from
   `scripts/gatekeeper-configurator-vite-config.ts`; `build` is just `tsc` and depends on
   `build:configurator`, which carries `VITE_FRONTEND_ERROR_REPORTING` in its fingerprint, and
-  `deploy` runs `vp run --no-cache build:configurator && wrangler deploy` — deploys never replay a
+  `deploy` runs `vp run --no-cache build:configurator && cf deploy` — deploys never replay a
   cached artifact. There is no `build` script
   and no direct builder call, because a script running the builder gets vp's stripped environment
   and bakes the wrong flag into the shipped HTML.

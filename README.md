@@ -25,7 +25,7 @@ To quickly run Cloudflare OS locally, [install pnpm](https://pnpm.io/), then do:
 
 Then visit: http://localhost:8787
 
-This runs the whole stack locally on wrangler and workerd. This is not meant for production use, but is a quick way to see what the product does.
+This runs the whole stack locally via `wrangler dev` and workerd (`cf` deploy/build for releases; multi-worker local dev still uses wrangler). This is not meant for production use, but is a quick way to see what the product does.
 
 Alternatively, you can [deploy to your Cloudflare account](https://os.cloudflare.app/deploy).
 
@@ -189,7 +189,7 @@ To quickly run Cloudflare OS locally, [install pnpm](https://pnpm.io/), then do:
 
 Then visit: http://localhost:8787
 
-This runs Cloudflare OS using `wrangler`, the Workers developer tooling CLI. This is not the right way to run the OS on a production server, but it works fine for trying it out on your local machine.
+This runs Cloudflare OS using `wrangler dev` for local multi-worker development and `cf` for deploys. This is not the right way to run the OS on a production server, but it works fine for trying it out on your local machine.
 
 Your data will be stored in a subdirectory named `.wrangler`.
 
