@@ -5,7 +5,7 @@
   "main": "./src/cloudflare.ts",
   "scripts": {
     "dev": "echo \"run 'pnpm dev-server' in the root directory instead\" >&2 && exit 1",
-    "deploy": "vp run --no-cache build:configurator && wrangler deploy",
+    "deploy": "vp run --no-cache build:configurator && cf deploy",
     "test:run": "vitest run && vitest run -c vitest.worker.config.ts",
     "clean": "rm -rf dist src/generated"
   },
@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "catalog:",
+    "cf": "catalog:",
     "miniflare": "5.20260801.0-alpha",
     "typescript": "catalog:",
     "vitest": "catalog:",
